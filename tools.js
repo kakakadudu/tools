@@ -1,27 +1,37 @@
 class Tools {
   /**
-   * 函数柯里化
+   * 柯里化函数，将多参函数转换为单参函数
    * @param {Function} fn 要执行的函数
    * @returns {Function}
    */
-  static curry = function () {
-    var fn = arguments[0]; // 获取要执行的函数
-    var args = [].slice.call(arguments, 1); // 克隆传递的参数，构成一个参数数组
-    // 如果传递的参数已经等于执行函数所需的参数数量
-    if (args.length === fn.length) {
-      return fn.apply(this, args)
-    }
-    // 参数不够向外界返回的函数
-    function _curry() {
-      // 推入之前判断
-      // 将新接收到的参数推入到参数数组中
-      args.push(...arguments);
-      if (args.length === fn.length) {
-        return fn.apply(this, args)
+  static curry = function (fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    const that = this;
+    return function () {
+      var newArgs = Array.from(arguments);
+      var totalArgs = args.concat(newArgs);
+      if (totalArgs.length >= fn.length) {
+        // 参数足够，执行函数
+        return fn.apply(this, totalArgs);
+      } else {
+        // 参数不够，递归执行
+        totalArgs.unshift(fn);
+        return that.curry.apply(that, totalArgs);
       }
-      return _curry;
     }
-    return _curry;
+  }
+
+  /**
+   * 函数管道，将多个函数依次执行，上一次函数的返回值作为下一次函数的参数
+   * @returns {Function}
+   */
+  static pipe = function () {
+    var args = Array.from(arguments);
+    return function (val) {
+      return args.reduce((result, fn) => {
+        return fn(result);
+      }, val);
+    }
   }
 
   /**
@@ -70,4 +80,3 @@ class Tools {
     }
   }
 }
-
