@@ -1,4 +1,4 @@
-class Tools {
+class myTools {
   /**
    * 柯里化函数，将多参函数转换为单参函数
    * @param {Function} fn 要执行的函数
