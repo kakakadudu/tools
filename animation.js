@@ -1,0 +1,130 @@
+if (!window.myPlugin) {
+  window.myPlugin = {}
+}
+/**
+ * 动画构造函数
+ * @param {object} options 配置信息
+ */
+window.myPlugin.Animation = function (options) {
+  var defaults = {
+    interval: 16,// 间隔时间 毫秒
+    duration: 1000,// 动画时长
+    from: {},// 开始动画配置
+    to: {},// 结束动画配置
+    repeat: 1,// 重复次数 0 无限次
+  }
+  this.option = Object.assign({}, defaults, options);
+
+  // 记录动画重复次数
+  this.count = 0;
+
+  // 初始动画参数
+  this.init = function () {
+    // 动画次数
+    this.number = Math.ceil(this.option.duration / this.option.interval);
+
+    // 动画移动的总距离
+    this.distance = {}
+
+    // 每次动画移动的距离
+    this.perDistance = {}
+    for (var key in this.option.from) {
+      this.distance[key] = this.option.to[key] - this.option.from[key];
+      this.perDistance[key] = this.distance[key] / this.number;
+    }
+
+    // 当前运动的状态
+    this.current = myTools.clone(this.option.from);
+
+    // 当前运动的次数
+    this.currentNumber = 0;
+
+    // 动画 id
+    this.timer = null;
+  }
+  this.init();
+
+  // 重复动画
+  this.loop = function () {
+    this.count++;
+    if (this.option.repeat > 0 && this.option.repeat === this.count) {
+      // 重复次数等于记录动画重复次数 动画结束 并重置动画参数
+      // 动画结束
+      if (this.option.onOver) {
+        this.option.onOver();
+      }
+      // 重置动画参数
+      this.option = Object.assign({}, defaults, options);
+      this.count = 0;// 记录动画重复次数
+      this.init();
+      return;
+    }
+    var temp = this.option.from;
+    this.option.from = this.option.to;
+    this.option.to = temp;
+    this.init();
+    this.start();
+  }
+}
+
+// 开始动画
+window.myPlugin.Animation.prototype.start = function () {
+  if (this.timer || this.currentNumber === this.number) {
+    return;
+  }
+  // 动画开始
+  if (this.count === 0 && this.option.onStart) {
+    this.option.onStart();
+  }
+  var that = this;
+  this.timer = setInterval(function () {
+    that.currentNumber++;
+    // 改变动画的值
+    for (var key in that.current) {
+      that.current[key] += that.perDistance[key];
+      // 运动到最后一次，改变为最后一次的数据
+      if (that.currentNumber === that.number) {
+        that.current[key] = that.option.to[key];
+      }
+      if (that.option.onMove) {
+        that.option.onMove(that.current);
+      }
+    }
+    if (that.currentNumber === that.number) {// 当前运动次数等于动画次数 停止动画
+      that.stop();
+      if (that.option.repeat >= 0) { // 0 循环
+        that.loop();
+      }
+    }
+  }, this.interval)
+
+}
+// 停止动画
+window.myPlugin.Animation.prototype.stop = function () {
+  clearInterval(this.timer);
+  this.timer = null;
+  // 动画停止
+  if (this.option.onStop) {
+    this.option.onStop(this.current);
+  }
+}
+
+/**
+ * <script src="tools.js"></script>
+ * <script src="animation.js"></script>
+ * <script>
+ *  var animate = new myPlugin.Animation({
+ *    interval: 16,// 间隔时间 毫秒
+ *    duration: 1000,// 动画时长
+ *    from: {}// 开始动画配置
+ *    to: {},// 结束动画配置
+ *    repeat: 1,// 重复次数 0 无限次
+ *    onStart: function () { // 动画开始 },
+ *    onMove: function (data) { // 移动 },
+ *    onStop: function (data) { // 停止 },
+ *    onOver: function () { // 动画结束 },
+ *  })
+ *  animate.start(); // 开始动画
+ *  animate.stop(); // 停止动画
+ * </script>
+ */

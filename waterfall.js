@@ -1,6 +1,5 @@
 if (!window.myPlugin) {
-  window.myPlugin = {
-  }
+  window.myPlugin = {}
 }
 /**
  * 图片瀑布流
@@ -9,12 +8,13 @@ if (!window.myPlugin) {
  */
 window.myPlugin.waterfall = function (options) {
   var defaults = {
-    minGap: 10,//默认图片之间的间隙
-    imgWidth: 300,//默认图片的宽度
-    container: document.body,//默认容器
+    minGap: 10,// 默认图片之间的间隙
+    imgWidth: 300,// 默认图片的宽度
+    container: document.body,// 默认容器
+    imgs: [],// 图片数组
   }
   options = Object.assign({}, defaults, options);
-  var imgs = [];
+  var imgArr = [];
 
   // 设置容器的定位
   setContainerPosition();
@@ -34,7 +34,7 @@ window.myPlugin.waterfall = function (options) {
       img.style.width = options.imgWidth + 'px';
       // 设置图片位置
       img.style.position = 'absolute';
-      imgs.push(img);
+      imgArr.push(img);
       img.onload = debounce;
       options.container.appendChild(img);
     }
@@ -52,7 +52,7 @@ window.myPlugin.waterfall = function (options) {
     var info = getPutInfo();
     // 每行图片个数的 top 值
     var tops = new Array(info.number).fill(0);
-    imgs.forEach((img) => {
+    imgArr.forEach((img) => {
       var minTop = Math.min.apply(null, tops);
       img.style.top = minTop + 'px';
       var index = tops.indexOf(minTop);
@@ -60,6 +60,9 @@ window.myPlugin.waterfall = function (options) {
       // 更新最小的 top 值
       tops[index] += (img.clientHeight + info.gap);
     })
+    // 设置容器高度
+    var maxTop = Math.max.apply(null, tops);
+    options.container.style.height = (maxTop - info.gap) + "px";
   }
 
   function getPutInfo() {
@@ -75,3 +78,16 @@ window.myPlugin.waterfall = function (options) {
     return opts;
   }
 }
+
+/**
+ * <script src="tools.js"></script>
+ * <script src="waterfall.js"></script>
+ * <script>
+ *  myPlugin.waterfall({
+ *    minGap: 10, // 默认图片之间的间隙
+ *    imgWidth: 300, // 默认图片的宽度
+ *    container: Element, // 容器
+ *    imgs: Array, // 图片数组
+ *  })
+ * </script>
+ */
