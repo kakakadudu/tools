@@ -11,60 +11,30 @@ window.myPlugin.Animation = function (options) {
     duration: 1000,// 动画时长
     from: {},// 开始动画配置
     to: {},// 结束动画配置
-    repeat: 1,// 重复次数 0 无限次
   }
   this.option = Object.assign({}, defaults, options);
 
-  // 记录动画重复次数
-  this.count = 0;
+  // 动画次数
+  this.number = Math.ceil(this.option.duration / this.option.interval);
 
-  // 初始动画参数
-  this.init = function () {
-    // 动画次数
-    this.number = Math.ceil(this.option.duration / this.option.interval);
+  // 动画移动的总距离
+  this.distance = {}
 
-    // 动画移动的总距离
-    this.distance = {}
-
-    // 每次动画移动的距离
-    this.perDistance = {}
-    for (var key in this.option.from) {
-      this.distance[key] = this.option.to[key] - this.option.from[key];
-      this.perDistance[key] = this.distance[key] / this.number;
-    }
-
-    // 当前运动的状态
-    this.current = myTools.clone(this.option.from);
-
-    // 当前运动的次数
-    this.currentNumber = 0;
-
-    // 动画 id
-    this.timer = null;
+  // 每次动画移动的距离
+  this.perDistance = {}
+  for (var key in this.option.from) {
+    this.distance[key] = this.option.to[key] - this.option.from[key];
+    this.perDistance[key] = this.distance[key] / this.number;
   }
-  this.init();
 
-  // 重复动画
-  this.loop = function () {
-    this.count++;
-    if (this.option.repeat > 0 && this.option.repeat === this.count) {
-      // 重复次数等于记录动画重复次数 动画结束 并重置动画参数
-      // 动画结束
-      if (this.option.onOver) {
-        this.option.onOver();
-      }
-      // 重置动画参数
-      this.option = Object.assign({}, defaults, options);
-      this.count = 0;// 记录动画重复次数
-      this.init();
-      return;
-    }
-    var temp = this.option.from;
-    this.option.from = this.option.to;
-    this.option.to = temp;
-    this.init();
-    this.start();
-  }
+  // 当前运动的状态
+  this.current = myTools.clone(this.option.from);
+
+  // 当前运动的次数
+  this.currentNumber = 0;
+
+  // 动画 id
+  this.timer = null;
 }
 
 // 开始动画
@@ -73,7 +43,7 @@ window.myPlugin.Animation.prototype.start = function () {
     return;
   }
   // 动画开始
-  if (this.count === 0 && this.option.onStart) {
+  if (this.option.onStart) {
     this.option.onStart();
   }
   var that = this;
@@ -92,8 +62,9 @@ window.myPlugin.Animation.prototype.start = function () {
     }
     if (that.currentNumber === that.number) {// 当前运动次数等于动画次数 停止动画
       that.stop();
-      if (that.option.repeat >= 0) { // 0 循环
-        that.loop();
+      // 动画结束
+      if (that.option.onOver) {
+        that.option.onOver();
       }
     }
   }, this.interval)
@@ -118,7 +89,6 @@ window.myPlugin.Animation.prototype.stop = function () {
  *    duration: 1000,// 动画时长
  *    from: {}// 开始动画配置
  *    to: {},// 结束动画配置
- *    repeat: 1,// 重复次数 0 无限次
  *    onStart: function () { // 动画开始 },
  *    onMove: function (data) { // 移动 },
  *    onStop: function (data) { // 停止 },
