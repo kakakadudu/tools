@@ -86,7 +86,17 @@ class myTools {
    * @param {boolean} isDeep 是否深度克隆
    */
   static clone = function (obj, isDeep) {
-    if (Object.prototype.toString.call(obj) === '[object Object]') {
+    if (Array.isArray(obj)) {
+      if (isDeep) {// 深度克隆
+        var cloneObj = [];
+        for (var i = 0; i < obj.length; i++) {
+          cloneObj[i] = this.clone(obj[i], isDeep);
+        }
+        return cloneObj;
+      } else {// 直接复制数组
+        return obj.slice();
+      }
+    } else if (typeof obj === "object") {
       var cloneObj = {};
       for (var key in obj) {
         if (obj.hasOwnProperty(key)) {// 判断是否为对象的自有属性
@@ -98,16 +108,6 @@ class myTools {
         }
       }
       return cloneObj;
-    } else if (Object.prototype.toString.call(obj) === "[object Array]") {
-      if (isDeep) {// 深度克隆
-        var cloneObj = [];
-        for (var i = 0; i < obj.length; i++) {
-          cloneObj[i] = this.clone(obj[i], isDeep);
-        }
-        return cloneObj;
-      } else {// 直接复制数组
-        return obj.slice();
-      }
     } else {// 函数、原始类型
       return obj;
     }
